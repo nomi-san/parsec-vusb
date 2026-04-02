@@ -45,26 +45,28 @@ This project documents the driver's IOCTL interface, device lifecycle, and USB d
 
 PVUD registers a device interface identified by the GUID `{25EFC209-91FE-4460-A4B7-6A9E31C0D0F1}`. The host process opens this interface via `SetupDiGetClassDevs` + `CreateFileW`, then communicates entirely through `DeviceIoControl()`.
 
-```
-┌─────────────────────────────────────────────────┐
-│  User Mode (parsecd / your app)                 │
-│                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
-│  │ Xbox 360 │  │ DualSense│  │   Mic    │ ...   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘       │
-│       │             │             │             │
-│       ▼             ▼             ▼             │
-│  ┌──────────────────────────────────────────┐   │
-│  │         PVUD IOCTL Interface             │   │
-│  │   DeviceIoControl(hAdapter, ...)         │   │
-│  └──────────────────┬───────────────────────┘   │
-├─────────────────────┼───────────────────────────┤
-│  Kernel Mode        │                           │
-│  ┌──────────────────▼───────────────────────┐   │
-│  │     Parsec Virtual USB Host Controller   │   │
-│  │           (Root\Parsec\VUSBA)            │   │
-│  └──────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+
+  subgraph UM["User Mode (parsecd/app)"]
+    XBOX["Xbox 360"]
+    DS["DualSense"]
+    MIC["Mic"]
+    ETC["..."]
+  end
+
+  IOCTL["PVUD IOCTL Interface\nDeviceIoControl(hAdapter, ...)"]
+
+  subgraph KM["Kernel Mode"]
+    VUSB["Parsec Virtual USB Host Controller\n(Root\\Parsec\\VUSBA)"]
+  end
+
+  XBOX --> IOCTL
+  DS --> IOCTL
+  MIC --> IOCTL
+  ETC --> IOCTL
+
+  IOCTL --> VUSB
 ```
 
 ---
